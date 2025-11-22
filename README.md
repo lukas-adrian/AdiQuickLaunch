@@ -19,5 +19,6 @@ All profiles are saved under %APPDATA%\AppData\Roaming\AdiSoft\AdiQuickLauncher\
 - create a better readme
 - (brainstorming idea, dockable somewhere?)
 
-Here how it looks like if I use the "Pin to taskbar" Windows function (right mouse click).
+Here how it looks like if I use the "Pin to taskbar" Windows function (right mouse click):
+
 <img width="322" height="430" alt="Screenshot1" src="https://github.com/user-attachments/assets/e66a7119-0d5b-41e5-a36c-73d3bee69368" />
