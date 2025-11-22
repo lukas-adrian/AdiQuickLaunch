@@ -39,6 +39,21 @@
     <ProjectReference Include="..\AdiQuickLaunchLib\AdiQuickLaunchLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Assets\icon.ico" />
+    <Resource Include="Assets\icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <None Remove="Assets\filenotexists.ico" />
+    <Resource Include="Assets\filenotexists.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <None Remove="Assets\foldernotexists.ico" />
+    <Resource Include="Assets\foldernotexists.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="&quot;$(SolutionDir)AdiVersioning\AdiVersioning.exe&quot; --project &quot;$(ProjectDir).&quot; --config $(ConfigurationName) --issinclude &quot;$(SolutionDir)Setup\Version.issinclude&quot;" />
   </Target>

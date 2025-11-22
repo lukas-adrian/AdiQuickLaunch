@@ -1,24 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using System.Windows.Shell;
 using System.Windows.Threading;
 using AdiQuickLaunchLib;
 using Application = System.Windows.Application;
-using IWSRL = IWshRuntimeLibrary;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using Path = System.IO.Path;
@@ -31,14 +22,14 @@ namespace AdiQuickLaunch
 
       public MainWindow()
       {
-         var sw = System.Diagnostics.Stopwatch.StartNew();
+         //var sw = System.Diagnostics.Stopwatch.StartNew();
 
          InitializeComponent();
-         System.Diagnostics.Debug.WriteLine($"InitializeComponent: {sw.ElapsedMilliseconds}ms");
+         //System.Diagnostics.Debug.WriteLine($"InitializeComponent: {sw.ElapsedMilliseconds}ms");
 
-         sw.Restart();
+         //sw.Restart();
          Init(null);
-         System.Diagnostics.Debug.WriteLine($"Init method: {sw.ElapsedMilliseconds}ms");
+         //System.Diagnostics.Debug.WriteLine($"Init method: {sw.ElapsedMilliseconds}ms");
 
       }
 
@@ -51,22 +42,21 @@ namespace AdiQuickLaunch
 
       private async void Init(string? jsonPath)
       {
-         var sw = System.Diagnostics.Stopwatch.StartNew();
-
+         //var sw = System.Diagnostics.Stopwatch.StartNew();
 
          List<QuickLauncher.QuickItem> lstFolder = new List<QuickLauncher.QuickItem>();
          if (!string.IsNullOrEmpty(jsonPath) || File.Exists(jsonPath))
             lstFolder = LoadFolders(jsonPath);
 
-         System.Diagnostics.Debug.WriteLine($"Init Function - LoadFolders: {sw.ElapsedMilliseconds}ms");
-         sw.Restart();
+         //System.Diagnostics.Debug.WriteLine($"Init Function - LoadFolders: {sw.ElapsedMilliseconds}ms");
+         //sw.Restart();
          string sCurDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
          // Set icon
          string iconPath = Path.Combine(sCurDirectory, "app.ico");
+         
          if (File.Exists(iconPath))
          {
-            //this.Icon = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
             Task.Run(() => {
                if (File.Exists(iconPath))
                {
@@ -77,22 +67,17 @@ namespace AdiQuickLaunch
             });
          }
 
-         System.Diagnostics.Debug.WriteLine($"Init Function - this.Icon: {sw.ElapsedMilliseconds}ms");
-         sw.Restart();
+         
+         //System.Diagnostics.Debug.WriteLine($"Init Function - this.Icon: {sw.ElapsedMilliseconds}ms");
+         //sw.Restart();
+         
          LoadFileList(lstFolder);
-
-         System.Diagnostics.Debug.WriteLine($"Init Function - LoadFileList: {sw.ElapsedMilliseconds}ms");
-         sw.Restart();
+         
+         //System.Diagnostics.Debug.WriteLine($"Init Function - LoadFileList: {sw.ElapsedMilliseconds}ms");
+         //sw.Restart();
          var cvs = new CollectionViewSource { Source = items };
          cvs.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
          FileListBox.ItemsSource = cvs.View;
-
-         System.Diagnostics.Debug.WriteLine($"Init Function - FileListBox.ItemsSource = cvs.View: {sw.ElapsedMilliseconds}ms");
-         sw.Restart();
-         //Task.Run(() => CreateJumpList(items));
-         ////CreateJumpList(items);
-
-         //this.Loaded += (s, e) => PositionWindow();
 
          this.Loaded += (s, e) => {
             PositionWindow();
@@ -103,7 +88,7 @@ namespace AdiQuickLaunch
             }), DispatcherPriority.Background);
          };
 
-         System.Diagnostics.Debug.WriteLine($"Init Function - this.Loaded: {sw.ElapsedMilliseconds}ms");
+         //System.Diagnostics.Debug.WriteLine($"Init Function - this.Loaded: {sw.ElapsedMilliseconds}ms");
 
       }
 
@@ -170,7 +155,7 @@ namespace AdiQuickLaunch
                   // Handle missing path
                   jumpList.JumpItems.Add(new JumpTask
                   {
-                     Title = $"{item.Name} (Missing)",
+                     Title = $"{item.Name}",
                      Description = "The path does not exist",
                      ApplicationPath = Application.ResourceAssembly.Location,
                      Arguments = "--error"
@@ -249,67 +234,78 @@ namespace AdiQuickLaunch
       {
          items = new List<FileSystemItem>();
 
+
          foreach (QuickLauncher.QuickItem cItem in lstFolder)
          {
-            FileAttributes attr = File.GetAttributes(cItem.Path);
-            if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+            try
             {
-               items.Add(new FileSystemItem
+               //FileAttributes attr = File.GetAttributes(cItem.Path);
+               //if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+               if(cItem.IsDirectory)
                {
-                  Name = cItem.Name,
-                  FullPath = cItem.Path,
-                  IsDirectory = true,
-                  Category = "Direcotries",
-                  Icon = AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, true)
-               });
+                  if (!Directory.Exists(cItem.Path))
+                  {
+                     string iconPath = "/Assets/foldernotexists.ico";
+                     Uri iconUri = new Uri(iconPath, UriKind.Relative);
+                     BitmapImage iconSource = new BitmapImage(iconUri);
+
+                     items.Add(new FileSystemItem
+                     {
+                        Name = $"{cItem.Name} (Missing)",
+                        FullPath = cItem.Path,
+                        IsDirectory = false,
+                        Category = "Files",
+                        Icon = iconSource
+                     });
+                  }
+                  else
+                  {
+                     items.Add(new FileSystemItem
+                     {
+                        Name = cItem.Name,
+                        FullPath = cItem.Path,
+                        IsDirectory = true,
+                        Category = "Direcotries",
+                        Icon = AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, true)
+                     });
+                  }
+               }
+               else
+               {
+                  if (!File.Exists(cItem.Path))
+                  {
+                     string iconPath = "/Assets/filenotexists.ico";
+                     Uri iconUri = new Uri(iconPath, UriKind.Relative);
+                     BitmapImage iconSource = new BitmapImage(iconUri);
+
+                     items.Add(new FileSystemItem
+                     {
+                        Name = $"{cItem.Name} (Missing)",
+                        FullPath = cItem.Path,
+                        IsDirectory = false,
+                        Category = "Files",
+                        Icon = iconSource
+                     });
+                  }
+                  else
+                  {
+                     items.Add(new FileSystemItem
+                     {
+                        Name = cItem.Name,
+                        FullPath = cItem.Path,
+                        IsDirectory = false,
+                        Category = "Files",
+                        Icon = AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, false)
+                     });
+                  }
+               }
             }
-            else
+            catch (Exception e)
             {
-               items.Add(new FileSystemItem
-               {
-                  Name = cItem.Name,
-                  FullPath = cItem.Path,
-                  IsDirectory = false,
-                  Category = "Files",
-                  Icon = AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, false)
-               });
+               Console.WriteLine($"{cItem.Path} =  {e.Message}");
             }
             
-            
-            // if (Directory.Exists(sFolder))
-            // {
-            //    // Add directories first
-            //    var directories = Directory.EnumerateDirectories(sFolder)
-            //       .OrderBy(d => Path.GetFileName(d));
-            //
-            //    foreach (String dir in directories)
-            //    {
-            //       items.Add(new FileSystemItem
-            //       {
-            //          Name = Path.GetFileName(dir),
-            //          FullPath = dir,
-            //          IsDirectory = true,
-            //          Category = Path.GetFileName(sFolder),
-            //          Icon = IconHelper.GetIcon(dir, true)
-            //       });
-            //    }
-            //
-            //    // Add files
-            //    var files = Directory.EnumerateFiles(sFolder)
-            //       .OrderBy(f => Path.GetFileName(f));
-            //
-            //    foreach (var file in files)
-            //    {
-            //       items.Add(new FileSystemItem
-            //       {
-            //          Name = Path.GetFileName(file),
-            //          FullPath = file,
-            //          IsDirectory = false,
-            //          Category = Path.GetFileName(sFolder),
-            //          Icon = IconHelper.GetIcon(file, false)
-            //       });
-            //    }
-            // }
+
          }
 
          FileListBox.ItemsSource = items;

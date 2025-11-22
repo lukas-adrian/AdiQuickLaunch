@@ -24,6 +24,21 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Assets\icon.ico" />
+    <Resource Include="Assets\icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <None Remove="Assets\DefaultFolder.png" />
+    <Resource Include="Assets\DefaultFolder.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <None Remove="Assets\DefaultFile.png" />
+    <Resource Include="Assets\DefaultFile.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
       <Exec Command="&quot;$(SolutionDir)AdiVersioning\AdiVersioning.exe&quot; --project &quot;$(ProjectDir).&quot; --config $(ConfigurationName) --issinclude &quot;$(SolutionDir)Setup\Version.issinclude&quot;" />
     </Target>

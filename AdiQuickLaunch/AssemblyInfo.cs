@@ -9,5 +9,5 @@ using System.Windows;
                                                 //(used if a resource is not found in the page,
                                                 // app, or any theme specific resource dictionaries)
 )]
-[assembly: AssemblyVersion("25.11.21.2")]
-[assembly: AssemblyFileVersion("25.11.21.2")]
+[assembly: AssemblyVersion("25.11.21.23")]
+[assembly: AssemblyFileVersion("25.11.21.23")]

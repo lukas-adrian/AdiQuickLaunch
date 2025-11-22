@@ -45,7 +45,7 @@
     <None Remove="Assets\icon.ico" />
     <ProjectReference Include="..\AdiQuickLaunchLib\AdiQuickLaunchLib.csproj" />
     <Resource Include="Assets\icon.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
 
