@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<UseWPF>true</UseWPF>
+	<Configurations>Debug;Release</Configurations>
+	<Platforms>x64</Platforms>
+  </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Prevent auto-generation of AssemblyVersion and AssemblyFileVersion -->
+        <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+        <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="PresentationCore">
+      <HintPath>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\8.0.22\PresentationCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+      <Exec Command="&quot;$(SolutionDir)AdiVersioning\AdiVersioning.exe&quot; --project &quot;$(ProjectDir).&quot; --config $(ConfigurationName) --issinclude &quot;$(SolutionDir)Setup\Version.issinclude&quot;" />
+    </Target>
+
+</Project>

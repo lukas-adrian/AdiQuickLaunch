@@ -1,0 +1,11 @@
+﻿<Application x:Class="AdiQuickLanuch.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AdiQuickLanuch">
+   <Application.Resources>
+      <Style x:Key="JumpListStyle" TargetType="{x:Type JumpList}">
+         <Setter Property="JumpList.ShowRecentCategory" Value="False" />
+         <Setter Property="JumpList.ShowFrequentCategory" Value="False" />
+      </Style>
+   </Application.Resources>
+</Application>
