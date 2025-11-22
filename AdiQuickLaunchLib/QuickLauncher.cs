@@ -94,19 +94,6 @@ namespace AdiQuickLaunchLib
       
       private static ImageSource GetEmojiFallback(bool isDirectory)
       {
-         // Choose the correct emoji
-         string emoji = isDirectory ? "\uD83D\uDCC1" : "\uD83D\uDCC4"; // 📁 or 📄
-
-         // In a real WPF app, you would need to render this TextBlock to a 
-         // RenderTargetBitmap to get an ImageSource, which is complex.
-         // For simplicity in the QuickItem class, we'll assume a static resource 
-         // or path for a fallback image, or rely on the XAML to render the emoji 
-         // if the ImageSource is null, but since the binding expects ImageSource, 
-         // we must return a BitmapSource (or null, which we are avoiding).
-       
-         // As a common pattern for ImageSource fallback, we'll return a static 
-         // resource URI or a placeholder.
-       
          // Fallback URI for a simple folder/file icon stored in resources
          string fallbackUri = isDirectory 
             ? "pack://application:,,,/Assets/DefaultFolder.png" 

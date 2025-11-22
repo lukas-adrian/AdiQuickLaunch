@@ -13,7 +13,8 @@
         ResizeMode="NoResize"
         Deactivated="Window_Deactivated"
         KeyDown="Window_KeyDown"
-        WindowStartupLocation="Manual">
+        WindowStartupLocation="Manual"
+        Icon="/Assets/icon.ico">
 
    <Border Background="#2D2D30" 
             BorderBrush="#3F3F46" 

@@ -7,6 +7,9 @@
 	<UseWPF>true</UseWPF>
 	<Configurations>Debug;Release</Configurations>
 	<Platforms>x64</Platforms>
+	<Description>Shared lib for AdiQuickLaunchItem and the AdiQuickLaunchManager</Description>
+	<PackageProjectUrl>https://github.com/lukas-adrian/AdiQuickLaunch</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/lukas-adrian/AdiQuickLaunch</RepositoryUrl>
   </PropertyGroup>
 
     <PropertyGroup>

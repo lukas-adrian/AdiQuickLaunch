@@ -2,13 +2,11 @@
 using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using AdiQuickLaunchLib;
-using Microsoft.Win32;
 using IWSRL = IWshRuntimeLibrary;
 
 namespace AdiQuickLaunchManager

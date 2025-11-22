@@ -7,9 +7,14 @@
     <UseWPF>true</UseWPF>
 	<UseWindowsForms>true</UseWindowsForms>
 	<Platforms>AnyCPU;x64</Platforms>
-	<ApplicationIcon>icon.ico</ApplicationIcon>
+	<ApplicationIcon>Assets\icon.ico</ApplicationIcon>
 	<TargetFramework>net8.0-windows</TargetFramework>
 	<AssemblyVersion>1.0.0.0</AssemblyVersion>
+	<Title>AdiQuickLaunchItem</Title>
+	<Description>Shows profile links to applications, files or folder</Description>
+	<Copyright>AdiSoft</Copyright>
+	<PackageProjectUrl>https://github.com/lukas-adrian/AdiQuickLaunch</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/lukas-adrian/AdiQuickLaunch</RepositoryUrl>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -28,10 +33,6 @@
       <Isolated>false</Isolated>
       <EmbedInteropTypes>true</EmbedInteropTypes>
     </COMReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="icon.ico" />
   </ItemGroup>
 
   <ItemGroup>

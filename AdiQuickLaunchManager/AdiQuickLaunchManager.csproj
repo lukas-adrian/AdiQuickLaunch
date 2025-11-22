@@ -10,6 +10,10 @@
     <PlatformTarget>x64</PlatformTarget>
     <PackageIcon>link.png</PackageIcon>
     <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <Title>AdiQuickLaunchManager</Title>
+    <Description>Manager to create or edit profiles for links</Description>
+    <PackageProjectUrl>https://github.com/lukas-adrian/AdiQuickLaunch</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/lukas-adrian/AdiQuickLaunch</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup>
