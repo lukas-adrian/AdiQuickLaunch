@@ -17,3 +17,4 @@ All profiles are saved under %APPDATA%\AppData\Roaming\AdiSoft\AdiQuickLauncher\
 - Drag & Drop of Files/Applications and Folder
 - Find out if Pin to Taskbar can set automaticly
 - create a better readme
+- (brainstorming idea, dockable somewhere?)
