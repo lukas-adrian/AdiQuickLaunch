@@ -14,11 +14,12 @@ I used Jetbrains Rider and .NET 8. The setup I created with OpenSource Applicati
 All profiles are saved under %APPDATA%\AppData\Roaming\AdiSoft\AdiQuickLauncher\GUID.json with an ID, Name, IconPath and a list with items/links (Name, Path, IsDirectory)
 
 ## Still to do:
-- next: Drag & Drop of Files/Applications and Folder
-- Find out if Pin to Taskbar can set automaticly
+- Drag & Drop of Files/Applications and Folder
+- checking now: Find out if Pin to Taskbar can set automaticly
 - create a better readme
 - (brainstorming idea, dockable somewhere?)
 - next: let the user change the order of the itmes
+- next: Manager, changing Names is not nice (switch to datagrid?)
 
 Here how it looks like if I use the "Pin to taskbar" Windows function (right mouse click):
 
