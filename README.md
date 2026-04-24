@@ -20,6 +20,7 @@ All profiles are saved under %APPDATA%\AppData\Roaming\AdiSoft\AdiQuickLauncher\
 - (brainstorming idea, dockable somewhere?)
 - next: let the user change the order of the itmes
 - next: Manager, changing Names is not nice (switch to datagrid?)
+- next: After uninstall of an app, remove the app or show that doenst exists
 
 Here how it looks like if I use the "Pin to taskbar" Windows function (right mouse click):
 
