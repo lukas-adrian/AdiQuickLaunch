@@ -17,12 +17,6 @@
     <LangVersion>14</LangVersion>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Prevent auto-generation of AssemblyVersion and AssemblyFileVersion -->
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
-  </PropertyGroup>
-
   <ItemGroup>
     <None Update="link.png">
       <Pack>True</Pack>
@@ -37,9 +31,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
-
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="&quot;$(SolutionDir)AdiVersioning\AdiVersioning.exe&quot; --project &quot;$(ProjectDir).&quot; --config $(ConfigurationName) --issinclude &quot;$(SolutionDir)Setup\Version.issinclude&quot;" />
-  </Target>
 
 </Project>
