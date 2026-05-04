@@ -1,7 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -13,13 +15,23 @@ using Application = System.Windows.Application;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using Path = System.IO.Path;
+using ComTypes = System.Runtime.InteropServices.ComTypes;
+using DataObject = System.Windows.DataObject;
+using DragDropEffects = System.Windows.DragDropEffects;
+using DragEventArgs = System.Windows.DragEventArgs;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Point = System.Windows.Point;
 
 namespace AdiQuickLaunch
 {
    public partial class MainWindow : Window
    {
-      private List<FileSystemItem> items;
-
+      private ObservableCollection<FileSystemItem> items;
+      private Point _dragStartPoint;
+      private FileSystemItem _draggedItem;
+      private QuickLauncher? _currentLauncher;
+      private bool _isPinned = false;
+      
       public MainWindow()
       {
          //var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -103,12 +115,12 @@ namespace AdiQuickLaunch
 
             // Deserializing the entire JSON file into the QuickLauncher class
             // which is the class that holds the 'Id', 'Name', and 'Items'.
-            var launcherData = JsonSerializer.Deserialize<QuickLauncher>(json);
+            _currentLauncher  = JsonSerializer.Deserialize<QuickLauncher>(json);
       
             // Now, safely return the Items list from the fully deserialized object.
-            if (launcherData != null && launcherData.Items != null)
+            if (_currentLauncher  != null && _currentLauncher .Items != null)
             {
-               return launcherData.Items.ToList();
+               return _currentLauncher .Items.ToList();
             }
          }
          catch (JsonException ex)
@@ -124,7 +136,6 @@ namespace AdiQuickLaunch
          return new List<QuickLauncher.QuickItem>();
       }
 
-
       private void PositionWindow()
       {
          var mousePos = System.Windows.Forms.Cursor.Position;
@@ -136,7 +147,7 @@ namespace AdiQuickLaunch
          if (this.Top < 0) this.Top = 10;
       }
 
-      private void CreateJumpList(List<FileSystemItem> items)
+      private void CreateJumpList(ObservableCollection<FileSystemItem> items)
       {
          try
          {
@@ -169,9 +180,11 @@ namespace AdiQuickLaunch
                   Description = item.IsDirectory
                      ? $"Open folder: {item.Name}"
                      : $"Open: {item.Name}",
-                  ApplicationPath = "explorer.exe",
+                  ApplicationPath = Environment.ProcessPath,
+                  //ApplicationPath = "explorer.exe",
                   Arguments = $"\"{item.FullPath}\"",
-                  WorkingDirectory = Path.GetDirectoryName(item.FullPath)
+                  WorkingDirectory = Path.GetDirectoryName(item.FullPath),
+                  //CustomCategory = item.IsDirectory ? "Folders" : "Files"
                };
 
                if (item.IsDirectory)
@@ -204,13 +217,14 @@ namespace AdiQuickLaunch
                //if (useCategories && !string.IsNullOrWhiteSpace(item.Category))
                //{
                //   //JumpList.AddToRecentCategory(item.FullPath);
-               //   //task.CustomCategory = item.Category;
+               //task.CustomCategory = item.IsDirectory ? "Folders" : "Files";
                //}
 
                jumpList.JumpItems.Add(task);
             }
 
             JumpList.SetJumpList(Application.Current, jumpList);
+            
          }
          catch (Exception ex)
          {
@@ -224,88 +238,150 @@ namespace AdiQuickLaunch
 
          string ResolveShortcut(string shortcutPath)
          {
-            var shell = new IWshRuntimeLibrary.WshShell();
-            var link = (IWshRuntimeLibrary.IWshShortcut)shell.CreateShortcut(shortcutPath);
-            return link.TargetPath; // path to exe, doc, etc.
+            var shellLink = (AdiQuickLaunchLib.IconHelper.IShellLink)new AdiQuickLaunchLib.IconHelper.ShellLink();
+            var persist = (ComTypes.IPersistFile)shellLink;
+    
+            persist.Load(shortcutPath, 0); // 0 = STGM_READ
+    
+            var sb = new System.Text.StringBuilder(260); // MAX_PATH
+            shellLink.GetPath(sb, sb.Capacity, IntPtr.Zero, 0);
+    
+            return sb.ToString();
          }
       }
 
+      // private void LoadFileList(List<QuickLauncher.QuickItem> lstFolder)
+      // {
+      //    items = new ObservableCollection<FileSystemItem>();
+      //
+      //    foreach (QuickLauncher.QuickItem cItem in lstFolder)
+      //    {
+      //       try
+      //       {
+      //          //FileAttributes attr = File.GetAttributes(cItem.Path);
+      //          //if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+      //          if(cItem.IsDirectory)
+      //          {
+      //             if (!Directory.Exists(cItem.Path))
+      //             {
+      //                string iconPath = "/Assets/foldernotexists.ico";
+      //                Uri iconUri = new Uri(iconPath, UriKind.Relative);
+      //                BitmapImage iconSource = new BitmapImage(iconUri);
+      //
+      //                items.Add(new FileSystemItem
+      //                {
+      //                   Name = $"{cItem.Name} (Missing)",
+      //                   FullPath = cItem.Path,
+      //                   IsDirectory = false,
+      //                   Category = "Files",
+      //                   Icon = iconSource
+      //                });
+      //             }
+      //             else
+      //             {
+      //                items.Add(new FileSystemItem
+      //                {
+      //                   Name = cItem.Name,
+      //                   FullPath = cItem.Path,
+      //                   IsDirectory = true,
+      //                   Category = "Direcotries",
+      //                   Icon = AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, true)
+      //                });
+      //             }
+      //          }
+      //          else
+      //          {
+      //             if (!File.Exists(cItem.Path))
+      //             {
+      //                string iconPath = "/Assets/filenotexists.ico";
+      //                Uri iconUri = new Uri(iconPath, UriKind.Relative);
+      //                BitmapImage iconSource = new BitmapImage(iconUri);
+      //
+      //                items.Add(new FileSystemItem
+      //                {
+      //                   Name = $"{cItem.Name} (Missing)",
+      //                   FullPath = cItem.Path,
+      //                   IsDirectory = false,
+      //                   Category = "Files",
+      //                   Icon = iconSource
+      //                });
+      //             }
+      //             else
+      //             {
+      //                items.Add(new FileSystemItem
+      //                {
+      //                   Name = cItem.Name,
+      //                   FullPath = cItem.Path,
+      //                   IsDirectory = false,
+      //                   Category = "Files",
+      //                   Icon = AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, false)
+      //                });
+      //             }
+      //          }
+      //       }
+      //       catch (Exception e)
+      //       {
+      //          Console.WriteLine($"{cItem.Path} =  {e.Message}");
+      //       }
+      //       
+      //
+      //    }
+      //
+      //    FileListBox.ItemsSource = items;
+      // }
+      
       private void LoadFileList(List<QuickLauncher.QuickItem> lstFolder)
       {
-         items = new List<FileSystemItem>();
+         items = new ObservableCollection<FileSystemItem>();
 
+         // Respect saved order
+         //var sorted = lstFolder.OrderBy(i => i.Order).ToList();
+         var sorted = lstFolder
+            .OrderBy(i => i.IsDirectory ? 0 : 1)
+            .ThenBy(i => i.Order)
+            .ToList();
 
-         foreach (QuickLauncher.QuickItem cItem in lstFolder)
+         foreach (QuickLauncher.QuickItem cItem in sorted)
          {
             try
             {
-               //FileAttributes attr = File.GetAttributes(cItem.Path);
-               //if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
-               if(cItem.IsDirectory)
+               if (cItem.IsDirectory)
                {
-                  if (!Directory.Exists(cItem.Path))
-                  {
-                     string iconPath = "/Assets/foldernotexists.ico";
-                     Uri iconUri = new Uri(iconPath, UriKind.Relative);
-                     BitmapImage iconSource = new BitmapImage(iconUri);
+                  string iconPath = Directory.Exists(cItem.Path)
+                     ? null
+                     : "/Assets/foldernotexists.ico";
 
-                     items.Add(new FileSystemItem
-                     {
-                        Name = $"{cItem.Name} (Missing)",
-                        FullPath = cItem.Path,
-                        IsDirectory = false,
-                        Category = "Files",
-                        Icon = iconSource
-                     });
-                  }
-                  else
+                  items.Add(new FileSystemItem
                   {
-                     items.Add(new FileSystemItem
-                     {
-                        Name = cItem.Name,
-                        FullPath = cItem.Path,
-                        IsDirectory = true,
-                        Category = "Direcotries",
-                        Icon = AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, true)
-                     });
-                  }
+                     Name = Directory.Exists(cItem.Path) ? cItem.Name : $"{cItem.Name} (Missing)",
+                     FullPath = cItem.Path,
+                     IsDirectory = true,
+                     Icon = Directory.Exists(cItem.Path)
+                        ? AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, true)
+                        : new BitmapImage(new Uri(iconPath, UriKind.Relative))
+                  });
                }
                else
                {
-                  if (!File.Exists(cItem.Path))
-                  {
-                     string iconPath = "/Assets/filenotexists.ico";
-                     Uri iconUri = new Uri(iconPath, UriKind.Relative);
-                     BitmapImage iconSource = new BitmapImage(iconUri);
+                  string iconPath = File.Exists(cItem.Path)
+                     ? null
+                     : "/Assets/filenotexists.ico";
 
-                     items.Add(new FileSystemItem
-                     {
-                        Name = $"{cItem.Name} (Missing)",
-                        FullPath = cItem.Path,
-                        IsDirectory = false,
-                        Category = "Files",
-                        Icon = iconSource
-                     });
-                  }
-                  else
+                  items.Add(new FileSystemItem
                   {
-                     items.Add(new FileSystemItem
-                     {
-                        Name = cItem.Name,
-                        FullPath = cItem.Path,
-                        IsDirectory = false,
-                        Category = "Files",
-                        Icon = AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, false)
-                     });
-                  }
+                     Name = File.Exists(cItem.Path) ? cItem.Name : $"{cItem.Name} (Missing)",
+                     FullPath = cItem.Path,
+                     IsDirectory = false,
+                     Icon = File.Exists(cItem.Path)
+                        ? AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, false)
+                        : new BitmapImage(new Uri(iconPath, UriKind.Relative))
+                  });
                }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-               Console.WriteLine($"{cItem.Path} =  {e.Message}");
+               Console.WriteLine($"{cItem.Path} = {ex.Message}");
             }
-            
-
          }
 
          FileListBox.ItemsSource = items;
@@ -313,31 +389,52 @@ namespace AdiQuickLaunch
 
       private void OpenItem(FileSystemItem item)
       {
+         if (item.IsDirectory && !Directory.Exists(item.FullPath) ||
+             !item.IsDirectory && !File.Exists(item.FullPath))
+         {
+            var result = MessageBox.Show(
+               $"'{item.Name}' does not exist anymore.\n\nRemove it from the list?",
+               "Not Found",
+               MessageBoxButton.YesNo,
+               MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+               items.Remove(item);
+               var match = _currentLauncher.Items.FirstOrDefault(q => q.Path == item.FullPath);
+               if (match != null)
+               {
+                  _currentLauncher.Items.Remove(match);
+                  Shared.SaveLauncher(_currentLauncher);
+               }
+            }
+            return;
+         }
+
          try
          {
             if (item.IsDirectory)
-            {
                Process.Start("explorer.exe", $"\"{item.FullPath}\"");
-            }
             else
-            {
                Process.Start(new ProcessStartInfo
                {
                   FileName = item.FullPath,
                   UseShellExecute = true
                });
-            }
+
             this.Close();
          }
          catch (Exception ex)
          {
             MessageBox.Show($"Error opening item: {ex.Message}", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+               MessageBoxButton.OK, MessageBoxImage.Error);
          }
       }
 
       private void Window_Deactivated(object sender, EventArgs e)
       {
+         if (_isPinned) return;
+         
          this.Hide(); // Instead of Close()
          Task.Run(() =>
          {
@@ -369,6 +466,78 @@ namespace AdiQuickLaunch
          {
             OpenItem(item);
          }
+      }
+      
+      private void FileListBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+      {
+         _dragStartPoint = e.GetPosition(null);
+         _draggedItem = (e.OriginalSource as FrameworkElement)?.DataContext as FileSystemItem;
+      }
+
+      private void FileListBox_PreviewMouseMove(object sender, MouseEventArgs e)
+      {
+         if (e.LeftButton != MouseButtonState.Pressed || _draggedItem == null) return;
+
+         var diff = _dragStartPoint - e.GetPosition(null);
+         if (Math.Abs(diff.X) < SystemParameters.MinimumHorizontalDragDistance &&
+             Math.Abs(diff.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+
+         DragDrop.DoDragDrop(FileListBox, new DataObject(typeof(FileSystemItem), _draggedItem), DragDropEffects.Move);
+      }
+
+      private void FileListBox_Drop(object sender, DragEventArgs e)
+      {
+         var draggedItem = e.Data.GetData(typeof(FileSystemItem)) as FileSystemItem;
+         if (draggedItem == null) return;
+
+         var element = e.OriginalSource as DependencyObject;
+
+         while (element != null && !(element is ListBoxItem))
+         {
+            System.Diagnostics.Debug.WriteLine($"Walking: {element.GetType().Name}");
+            element = VisualTreeHelper.GetParent(element);
+         }
+         var target = (element as ListBoxItem)?.DataContext as FileSystemItem;
+         if (target == null || target == draggedItem) return;
+         
+         // Block cross-type drops
+         if (draggedItem.IsDirectory != target.IsDirectory) return;
+
+         int oldIndex = items.IndexOf(draggedItem);
+         int newIndex = items.IndexOf(target);
+
+         if (oldIndex < 0 || newIndex < 0) return;
+
+         items.Move(oldIndex, newIndex);
+         
+         if (_currentLauncher != null)
+         {
+            for (int i = 0; i < items.Count; i++)
+            {
+               var match = _currentLauncher.Items.FirstOrDefault(q => q.Path == items[i].FullPath);
+               if (match != null)
+                  match.Order = i;
+            }
+            Shared.SaveLauncher(_currentLauncher);
+         }
+      }
+      
+      private void PinButton_Checked(object sender, RoutedEventArgs e)
+      {
+         _isPinned = true;
+         this.Topmost = true;
+      }
+
+      private void PinButton_Unchecked(object sender, RoutedEventArgs e)
+      {
+         _isPinned = false;
+         this.Topmost = false;
+      }
+
+      private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+      {
+         if (e.ButtonState == MouseButtonState.Pressed)
+            this.DragMove();
       }
    }
 

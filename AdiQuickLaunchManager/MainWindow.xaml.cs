@@ -1,13 +1,15 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Windows.UI.Shell;
 using AdiQuickLaunchLib;
-using IWSRL = IWshRuntimeLibrary;
+using Windows.Foundation.Metadata; // For ApiInformation
+
+using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace AdiQuickLaunchManager
 {
@@ -18,13 +20,15 @@ namespace AdiQuickLaunchManager
    {
       public ObservableCollection<QuickLauncher> Launchers { get; set; }
       private readonly Dictionary<QuickLauncher, string> _editOriginals = new();
-
+      private Point _dragStartPoint;
+      private QuickLauncher.QuickItem? _draggedItem;
+      
       public MainWindow()
       {
          InitializeComponent();
 
 
-         Launchers = LoadLaunchers();
+         Launchers = Shared.LoadLaunchers();
          DataContext = this;
       }
 
@@ -208,7 +212,7 @@ namespace AdiQuickLaunchManager
 
          string sQLauncherPath = GetApplicationInstallPath();
 #if DEBUG
-         sQLauncherPath = @"D:\Development\AdiSoft\AdiQuickLaunch\AdiQuickLaunch\bin\x64\Debug\net8.0-windows";
+         sQLauncherPath = @"D:\Development\AdiSoft\AdiQuickLaunch\AdiQuickLaunch\bin\x64\Debug\net10.0-windows";
 #endif
          string sQLaunchAppl = Path.Combine(sQLauncherPath, @"AdiQuickLaunch.exe");
 
@@ -225,6 +229,43 @@ namespace AdiQuickLaunchManager
          MessageBox.Show($"Add the link '{Path.GetFileName(sDestLink)}' into the Taskbar." + Environment.NewLine +
                          $"You can access your Links over the jump list" + Environment.NewLine +  
                          $"After adding you can delete the link from the desktop", "AdiQuickLauncher", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.Yes);
+
+         PinToTaskbarButton_Click(null, null);
+      }
+      
+      private async void PinToTaskbarButton_Click(object sender, RoutedEventArgs e)
+      {
+         // 1. Check if the TaskbarManager API is available on the current Windows version.
+         if (ApiInformation.IsTypePresent("Windows.UI.Shell.TaskbarManager"))
+         {
+            TaskbarManager taskbarManager = TaskbarManager.GetDefault();
+
+            // 2. Check if the app is already pinned.
+            if (!await taskbarManager.IsCurrentAppPinnedAsync())
+            {
+               // 3. Request pin. This will show the user confirmation dialog.
+               bool isPinned = await taskbarManager.RequestPinCurrentAppAsync();
+
+               if (isPinned)
+               {
+                  // Success!
+                  MessageBox.Show("App successfully pinned to the taskbar.");
+               }
+               else
+               {
+                  // User clicked 'No' or dismissed the prompt.
+                  MessageBox.Show("Pin request declined or failed.");
+               }
+            }
+            else
+            {
+               MessageBox.Show("App is already pinned to the taskbar.");
+            }
+         }
+         else
+         {
+            MessageBox.Show("Taskbar pinning API is not supported on this version of Windows.");
+         }
       }
 
       private  string GetApplicationInstallPath()
@@ -234,22 +275,25 @@ namespace AdiQuickLaunchManager
          string sPath = Path.Combine(sBaseDir, "AdiQuickLaunchItem");
          return sPath;
       }
-
+      
       private void CreateShortcut(string shortcutPath, string targetExe, string? arguments = null, string? iconPath = null)
       {
-         
-         //MessageBox.Show($"shortcutPath {shortcutPath}{Environment.NewLine}targetExe {targetExe}");
+         var shellLink = (AdiQuickLaunchLib.IconHelper.IShellLink)new AdiQuickLaunchLib.IconHelper.ShellLink();
 
-         var shell = new IWSRL.WshShell();
-         IWSRL.IWshShortcut shortcut = (IWSRL.IWshShortcut)shell.CreateShortcut(shortcutPath);
+         shellLink.SetPath(targetExe);
+         shellLink.SetWorkingDirectory(Path.GetDirectoryName(targetExe) ?? "");
+         shellLink.SetShowCmd(1); // SW_SHOWNORMAL
 
-         shortcut.TargetPath = targetExe;
-         shortcut.WorkingDirectory = System.IO.Path.GetDirectoryName(targetExe);
-         shortcut.Arguments = arguments ?? "";
+         if (!string.IsNullOrEmpty(arguments))
+            shellLink.SetArguments(arguments);
+
          if (!string.IsNullOrEmpty(iconPath))
-            shortcut.IconLocation = iconPath;
+            shellLink.SetIconLocation(iconPath, 0);
+         else
+            shellLink.SetIconLocation(targetExe, 0);
 
-         shortcut.Save();
+         var persist = (ComTypes.IPersistFile)shellLink;
+         persist.Save(shortcutPath, false);
       }
 
       private void AddFolder_Click(object sender, RoutedEventArgs e)
@@ -268,7 +312,7 @@ namespace AdiQuickLaunchManager
                   });
             }
             
-            SaveLauncher(launcher);
+            Shared.SaveLauncher(launcher);
          }
          else
          {
@@ -278,6 +322,7 @@ namespace AdiQuickLaunchManager
                MessageBoxImage.Warning);
          }
       }
+      
       private void AddItem_Click(object sender, RoutedEventArgs e)
       {
          if (LaunchersList.SelectedItem is QuickLauncher launcher)
@@ -297,7 +342,7 @@ namespace AdiQuickLaunchManager
                      });
                }
                
-               SaveLauncher(launcher);
+               Shared.SaveLauncher(launcher);
             }
          }
          else
@@ -314,7 +359,7 @@ namespace AdiQuickLaunchManager
          if (LaunchersList.SelectedItem is QuickLauncher launcher && FoldersList.SelectedItem is QuickLauncher.QuickItem item)
          {
             launcher.Items.Remove(item);
-            SaveLauncher(launcher);
+            Shared.SaveLauncher(launcher);
          }
          else
          {
@@ -323,49 +368,6 @@ namespace AdiQuickLaunchManager
                MessageBoxButton.OK,
                MessageBoxImage.Warning);
          }
-      }
-
-      private void SaveLauncher(QuickLauncher launcher)
-      {
-         string baseFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "AdiSoft", "AdiQuickLauncher");
-
-         Directory.CreateDirectory(baseFolder); // ensure folder exists
-
-         string filePath = Path.Combine(baseFolder, $"{launcher.Id}.json");
-
-         string json = JsonSerializer.Serialize(launcher, new JsonSerializerOptions { WriteIndented = true });
-         File.WriteAllText(filePath, json);
-      }
-
-      private  ObservableCollection<QuickLauncher> LoadLaunchers()
-      {
-         string baseFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "AdiSoft", "AdiQuickLauncher");
-
-         if (!Directory.Exists(baseFolder))
-            return new ObservableCollection<QuickLauncher>();
-
-         var launchers = new ObservableCollection<QuickLauncher>();
-
-         foreach (var file in Directory.GetFiles(baseFolder, "*.json"))
-         {
-            try
-            {
-               string json = File.ReadAllText(file);
-               QuickLauncher? launcher = JsonSerializer.Deserialize<QuickLauncher>(json);
-               if (launcher != null)
-                  launchers.Add(launcher);
-            }
-            catch
-            {
-               // skip corrupted files
-            }
-         }
-
-         return launchers;
       }
 
       private void ChangeIcon_Click(object sender, RoutedEventArgs e)
@@ -382,7 +384,7 @@ namespace AdiQuickLaunchManager
             {
                // Save the selected icon path
                launcher.IconPath = dialog.FileName;
-               SaveLauncher(launcher);
+               Shared.SaveLauncher(launcher);
             }
          }
          else
@@ -399,8 +401,48 @@ namespace AdiQuickLaunchManager
          foreach (QuickLauncher laucher in LaunchersList.Items)
          {
             if(laucher.CheckIsDirty())
-               SaveLauncher(laucher);
+               Shared.SaveLauncher(laucher);
          }
+      }
+      
+      private void FoldersList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+      {
+         _dragStartPoint = e.GetPosition(null);
+         _draggedItem = (e.OriginalSource as FrameworkElement)?.DataContext as QuickLauncher.QuickItem;
+      }
+
+      private void FoldersList_PreviewMouseMove(object sender, MouseEventArgs e)
+      {
+         if (e.LeftButton != MouseButtonState.Pressed || _draggedItem == null) return;
+
+         var diff = _dragStartPoint - e.GetPosition(null);
+         if (Math.Abs(diff.X) < SystemParameters.MinimumHorizontalDragDistance &&
+             Math.Abs(diff.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+
+         DragDrop.DoDragDrop(FoldersList, new DataObject(typeof(QuickLauncher.QuickItem), _draggedItem), DragDropEffects.Move);
+         _draggedItem = null;
+      }
+
+      private void FoldersList_Drop(object sender, DragEventArgs e)
+      {
+         var draggedItem = e.Data.GetData(typeof(QuickLauncher.QuickItem)) as QuickLauncher.QuickItem;
+         if (draggedItem == null) return;
+
+         var target = (e.OriginalSource as FrameworkElement)?.DataContext as QuickLauncher.QuickItem;
+         if (target == null || target == draggedItem) return;
+         
+         // Block cross-type drops
+         if (draggedItem.IsDirectory != target.IsDirectory) return;
+
+         var launcher = LaunchersList.SelectedItem as QuickLauncher;
+         if (launcher == null) return;
+
+         int oldIndex = launcher.Items.IndexOf(draggedItem);
+         int newIndex = launcher.Items.IndexOf(target);
+         if (oldIndex < 0 || newIndex < 0) return;
+
+         launcher.Items.Move(oldIndex, newIndex);
+         Shared.SaveLauncher(launcher);
       }
    }
 }

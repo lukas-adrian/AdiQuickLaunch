@@ -4,14 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="AdiQuickLauncher Manager" Height="500" Width="800"
+        Title="AdiQuickLauncher Manager" Height="800" Width="800"
         xmlns:converter="clr-namespace:AdiQuickLaunchLib.Converter;assembly=AdiQuickLaunchLib"
         Icon="/Assets/icon.ico"
         Closing="MainWindow_Closing">
    
    <Window.Resources>
-      <converter:BooleanToVisibilityConverter x:Key="converter:BooleanToVisibilityConverter"/>
-      <converter:InvertBooleanToVisibilityConverter x:Key="converter:InvertBooleanToVisibilityConverter"/>
+      <!--<converter:BooleanToVisibilityConverter x:Key="converter:BooleanToVisibilityConverter"/>
+      <converter:InvertBooleanToVisibilityConverter x:Key="converter:InvertBooleanToVisibilityConverter"/>-->
 
       <!-- Style for the inline TextBox editor (uses EventSetters) -->
       <Style x:Key="InlineEditorTextBoxStyle" TargetType="TextBox">
@@ -149,7 +149,11 @@
                      ItemsSource="{Binding SelectedItem.Items, ElementName=LaunchersList}"
                      Background="Transparent"
                      BorderThickness="0"
-                     Foreground="White">
+                     Foreground="White"
+                     AllowDrop="True"
+                     PreviewMouseLeftButtonDown="FoldersList_PreviewMouseLeftButtonDown"
+                     PreviewMouseMove="FoldersList_PreviewMouseMove"
+                     Drop="FoldersList_Drop">
                
                <ListBox.Resources>
                   <converter:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>

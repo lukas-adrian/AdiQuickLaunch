@@ -12,7 +12,8 @@ namespace AdiQuickLaunchLib
       {
          private string _name;
          private bool _isDirty; // The new tracking flag
-
+         private int _order; 
+         
          public string Name
          {
             get => _name;
@@ -39,6 +40,20 @@ namespace AdiQuickLaunchLib
                {
                   _isDirty = value;
                   OnPropertyChanged(nameof(IsDirty));
+               }
+            }
+         }
+         
+         public int Order             // ADD THIS
+         {
+            get => _order;
+            set
+            {
+               if (_order != value)
+               {
+                  _order = value;
+                  OnPropertyChanged(nameof(Order));
+                  IsDirty = true;
                }
             }
          }

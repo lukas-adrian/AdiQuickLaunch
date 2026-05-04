@@ -9,16 +9,22 @@ With the AdiQuickLaunchManager you create a QuickLaunch-Profile and add Applicat
 After it you create a "link on the desktop". That link is a link to the AdiQuickLaunchItem, which starts a small list of your links.
 If you open that list you just say "Pin to Taskbar" in the Taskbar menu (right mouse click on the applicatoin). The list will be pinned and you can access your list like like a StartMenu with the right mouse click. Left mouse will also show the list but it will start the AdiQuickLaunch-App. But it looks almost the same.
 
+## Last changes:
+
+- let the user change the order of the itmes
+- Pin the laucher instead close after losing focus
+- switched to .NET 10
+
 ## A little bit technical stuff:
 I used Jetbrains Rider and .NET 8. The setup I created with OpenSource Application Inno Setup Compiler ([Inno Setup Homepage](https://jrsoftware.org/isinfo.php)).
 All profiles are saved under %APPDATA%\AppData\Roaming\AdiSoft\AdiQuickLauncher\GUID.json with an ID, Name, IconPath and a list with items/links (Name, Path, IsDirectory)
 
 ## Still to do:
+
 - Drag & Drop of Files/Applications and Folder
 - checking now: Find out if Pin to Taskbar can set automaticly
 - create a better readme
 - (brainstorming idea, dockable somewhere?)
-- next: let the user change the order of the itmes
 - next: Manager, changing Names is not nice (switch to datagrid?)
 - next: After uninstall of an app, remove the app or show that doenst exists
 

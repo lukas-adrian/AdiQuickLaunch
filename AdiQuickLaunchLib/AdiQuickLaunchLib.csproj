@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<UseWPF>true</UseWPF>
@@ -10,6 +10,7 @@
 	<Description>Shared lib for AdiQuickLaunchItem and the AdiQuickLaunchManager</Description>
 	<PackageProjectUrl>https://github.com/lukas-adrian/AdiQuickLaunch</PackageProjectUrl>
 	<RepositoryUrl>https://github.com/lukas-adrian/AdiQuickLaunch</RepositoryUrl>
+	<LangVersion>14</LangVersion>
   </PropertyGroup>
 
     <PropertyGroup>
@@ -17,12 +18,6 @@
         <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
         <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="PresentationCore">
-      <HintPath>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\8.0.22\PresentationCore.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Assets\icon.ico" />
@@ -40,7 +35,7 @@
   </ItemGroup>
 
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-      <Exec Command="&quot;$(SolutionDir)AdiVersioning\AdiVersioning.exe&quot; --project &quot;$(ProjectDir).&quot; --config $(ConfigurationName) --issinclude &quot;$(SolutionDir)Setup\Version.issinclude&quot;" />
+        <Exec Command="&quot;$(SolutionDir)AdiVersioning\AdiVersioning.exe&quot; --project &quot;$(ProjectDir).&quot; --config $(ConfigurationName) --issinclude &quot;$(SolutionDir)Setup\Version.issinclude&quot;" Condition="'$(SolutionDir)' != '' and '$(SolutionDir)' != '*Undefined*'" />
     </Target>
 
 </Project>
