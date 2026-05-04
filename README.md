@@ -12,8 +12,10 @@ If you open that list you just say "Pin to Taskbar" in the Taskbar menu (right m
 ## Last changes (26.05.04.13):
 
 - let the user change the order of the itmes
+- folder on top, files/apps bottom
 - Pin the laucher instead close after losing focus
 - switched to .NET 10
+- fixed the version no problems
 
 ## A little bit technical stuff:
 I used Jetbrains Rider and .NET 8. The setup I created with OpenSource Application Inno Setup Compiler ([Inno Setup Homepage](https://jrsoftware.org/isinfo.php)).
