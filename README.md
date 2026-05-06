@@ -27,12 +27,12 @@ All profiles are saved under %APPDATA%\AppData\Roaming\AdiSoft\AdiQuickLauncher\
 
 ## Still to do:
 
-- Drag & Drop of Files/Applications and Folder
+- Drag & Drop of Files/Applications and Folder from Windwos into the manager
 - checking now: Find out if Pin to Taskbar can set automaticly
-- create a better readme
 - (brainstorming idea, dockable somewhere?)
 - next: Manager, changing Names is not nice (switch to datagrid?)
 - next: After uninstall of an app, remove the app or show that doenst exists
+- custom app parameter
 
 Here how it looks like if I use the "Pin to taskbar" Windows function (right mouse click):
 
