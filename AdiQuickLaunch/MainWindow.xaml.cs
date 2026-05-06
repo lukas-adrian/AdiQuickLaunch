@@ -180,21 +180,20 @@ namespace AdiQuickLaunch
                   Description = item.IsDirectory
                      ? $"Open folder: {item.Name}"
                      : $"Open: {item.Name}",
-                  ApplicationPath = Environment.ProcessPath,
-                  //ApplicationPath = "explorer.exe",
-                  Arguments = $"\"{item.FullPath}\"",
-                  WorkingDirectory = Path.GetDirectoryName(item.FullPath),
-                  //CustomCategory = item.IsDirectory ? "Folders" : "Files"
+                  WorkingDirectory = Path.GetDirectoryName(item.FullPath)
                };
 
                if (item.IsDirectory)
                {
+                  task.ApplicationPath = "explorer.exe";
+                  task.Arguments = $"\"{item.FullPath}\"";
                   task.IconResourcePath = "shell32.dll";
-                  task.IconResourceIndex = 3; // folder
+                  task.IconResourceIndex = 3;
                }
-               else if (Path.GetExtension(item.FullPath).Equals(".exe", StringComparison.OrdinalIgnoreCase) ||
-                        Path.GetExtension(item.FullPath).Equals(".dll", StringComparison.OrdinalIgnoreCase))
+               else if (Path.GetExtension(item.FullPath).Equals(".exe", StringComparison.OrdinalIgnoreCase))
                {
+                  task.ApplicationPath = item.FullPath;
+                  task.Arguments = "";
                   task.IconResourcePath = item.FullPath;
                   task.IconResourceIndex = 0;
                }
@@ -208,8 +207,11 @@ namespace AdiQuickLaunch
                }
                else
                {
+                  // xml, pdf, etc - open with default app via explorer
+                  task.ApplicationPath = "explorer.exe";
+                  task.Arguments = $"\"{item.FullPath}\"";
                   task.IconResourcePath = "shell32.dll";
-                  task.IconResourceIndex = 1; // generic doc
+                  task.IconResourceIndex = 1;
                }
 
 
