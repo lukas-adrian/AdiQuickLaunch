@@ -12,6 +12,8 @@
    <Window.Resources>
       <!--<converter:BooleanToVisibilityConverter x:Key="converter:BooleanToVisibilityConverter"/>
       <converter:InvertBooleanToVisibilityConverter x:Key="converter:InvertBooleanToVisibilityConverter"/>-->
+      
+      
 
       <!-- Style for the inline TextBox editor (uses EventSetters) -->
       <Style x:Key="InlineEditorTextBoxStyle" TargetType="TextBox">
@@ -155,9 +157,19 @@
                      PreviewMouseMove="FoldersList_PreviewMouseMove"
                      Drop="FoldersList_Drop">
                
+               <ListBox.ContextMenu>
+                  <ContextMenu>
+                     <MenuItem Header="Edit" Click="EditItem_Click"/>
+                     <MenuItem Header="Remove" Click="ContextRemoveItem_Click"/>
+                  </ContextMenu>
+               </ListBox.ContextMenu>
+               
                <ListBox.Resources>
                   <converter:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
                   <converter:InvertBooleanToVisibilityConverter x:Key="InvertBooleanToVisibilityConverter"/>
+                  <converter:BooleanToOpacityConverter x:Key="BooleanToOpacityConverter"/>
+                  <converter:BooleanToStrikethroughConverter x:Key="BooleanToStrikethroughConverter"/>
+                  <converter:BooleanToForegroundConverter x:Key="BooleanToForegroundConverter"/>
 
                   <Style x:Key="NameDisplayStyle" TargetType="{x:Type TextBlock}">
                      <Setter Property="Foreground" Value="White"/>
@@ -193,16 +205,19 @@
                <ListBox.ItemTemplate>
                   <DataTemplate>
                      <StackPanel Orientation="Horizontal" Margin="0,2">
-                
+
                         <Image Source="{Binding IconSource}" 
                                Width="16" Height="16" 
                                VerticalAlignment="Center"
-                               Margin="0,0,8,0"/>
+                               Margin="0,0,8,0"
+                               Opacity="{Binding IsMissing, Converter={StaticResource BooleanToOpacityConverter}}"/>
 
                         <Grid Margin="0,0,10,0" VerticalAlignment="Center">
                            <TextBlock Text="{Binding Name}" 
                                       FontWeight="Bold"
                                       Style="{StaticResource NameDisplayStyle}"
+                                      TextDecorations="{Binding IsMissing, Converter={StaticResource BooleanToStrikethroughConverter}}"
+                                      Foreground="{Binding IsMissing, Converter={StaticResource BooleanToForegroundConverter}}"
                                       Visibility="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected, Converter={StaticResource InvertBooleanToVisibilityConverter}}"/>
 
                            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 

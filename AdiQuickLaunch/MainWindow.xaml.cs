@@ -50,6 +50,13 @@ namespace AdiQuickLaunch
          InitializeComponent();
 
          Init(jsonPath);
+         
+         if (_currentLauncher.IsPinned)
+         {
+            PinButton.IsChecked = true;
+            _isPinned = true;
+            this.Topmost = true;
+         }
       }
 
       private async void Init(string? jsonPath)
@@ -169,7 +176,9 @@ namespace AdiQuickLaunch
                      Title = $"{item.Name}",
                      Description = "The path does not exist",
                      ApplicationPath = Application.ResourceAssembly.Location,
-                     Arguments = "--error"
+                     Arguments = string.IsNullOrEmpty(item.Parameters) 
+                        ? $"\"{item.FullPath}\"" 
+                        : $"\"{item.FullPath}\" {item.Parameters}"
                   });
                   continue;
                }
@@ -356,8 +365,10 @@ namespace AdiQuickLaunch
                   items.Add(new FileSystemItem
                   {
                      Name = Directory.Exists(cItem.Path) ? cItem.Name : $"{cItem.Name} (Missing)",
+                     IsMissing = !Directory.Exists(cItem.Path),
                      FullPath = cItem.Path,
                      IsDirectory = true,
+                     Parameters = cItem.Parameters,
                      Icon = Directory.Exists(cItem.Path)
                         ? AdiQuickLaunchLib.IconHelper.GetIcon(cItem.Path, true)
                         : new BitmapImage(new Uri(iconPath, UriKind.Relative))
@@ -372,6 +383,8 @@ namespace AdiQuickLaunch
                   items.Add(new FileSystemItem
                   {
                      Name = File.Exists(cItem.Path) ? cItem.Name : $"{cItem.Name} (Missing)",
+                     Parameters = cItem.Parameters,
+                     IsMissing = !File.Exists(cItem.Path),
                      FullPath = cItem.Path,
                      IsDirectory = false,
                      Icon = File.Exists(cItem.Path)
@@ -421,6 +434,7 @@ namespace AdiQuickLaunch
                Process.Start(new ProcessStartInfo
                {
                   FileName = item.FullPath,
+                  Arguments = item.Parameters,
                   UseShellExecute = true
                });
 
@@ -528,12 +542,16 @@ namespace AdiQuickLaunch
       {
          _isPinned = true;
          this.Topmost = true;
+         _currentLauncher.IsPinned = true;
+         Shared.SaveLauncher(_currentLauncher);
       }
 
       private void PinButton_Unchecked(object sender, RoutedEventArgs e)
       {
          _isPinned = false;
          this.Topmost = false;
+         _currentLauncher.IsPinned = false;
+         Shared.SaveLauncher(_currentLauncher);
       }
 
       private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -545,10 +563,12 @@ namespace AdiQuickLaunch
 
    public class FileSystemItem
    {
+      public string Parameters { get; set; } = "";
       public string Name { get; set; }
       public string FullPath { get; set; }
       public bool IsDirectory { get; set; }
       public string Category { get; set; }
       public ImageSource Icon { get; set; }
+      public bool IsMissing { get; set; }
    }
 }

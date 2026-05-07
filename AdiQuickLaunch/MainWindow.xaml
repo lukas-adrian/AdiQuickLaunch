@@ -1,6 +1,7 @@
 ﻿<Window x:Class="AdiQuickLaunch.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converter="clr-namespace:AdiQuickLaunchLib.Converter;assembly=AdiQuickLaunchLib"
         Title="Quick Launch Files"
         Width="320" 
         Height="450"
@@ -16,6 +17,14 @@
         WindowStartupLocation="Manual"
         Icon="/Assets/icon.ico">
 
+   <Window.Resources>
+      <converter:BooleanToVisibilityConverter x:Key="converter:BooleanToVisibilityConverter"/>
+      <converter:InvertBooleanToVisibilityConverter x:Key="converter:InvertBooleanToVisibilityConverter"/>
+      <converter:BooleanToOpacityConverter x:Key="BooleanToOpacityConverter"/>
+      <converter:BooleanToStrikethroughConverter x:Key="BooleanToStrikethroughConverter"/>
+      <converter:BooleanToForegroundConverter x:Key="BooleanToForegroundConverter"/>
+   </Window.Resources>
+   
    <Border Background="#2D2D30" 
             BorderBrush="#3F3F46" 
             BorderThickness="1"
@@ -110,11 +119,13 @@
                      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="{Binding Icon}"
                                Width="16" Height="16"
-                               Margin="0,0,6,0"/>
+                               Margin="0,0,6,0"
+                               Opacity="{Binding IsMissing, Converter={StaticResource BooleanToOpacityConverter}}"/>
                         <TextBlock Text="{Binding Name}" 
-                                   Foreground="White"
                                    FontFamily="Segoe UI"
-                                   FontSize="13"/>
+                                   FontSize="13"
+                                   Foreground="{Binding IsMissing, Converter={StaticResource BooleanToForegroundConverter}}"
+                                   TextDecorations="{Binding IsMissing, Converter={StaticResource BooleanToStrikethroughConverter}}"/>
                      </StackPanel>
                   </DataTemplate>
                </ListBox.ItemTemplate>

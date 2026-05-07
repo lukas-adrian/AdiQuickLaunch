@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Text.Json.Serialization;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -13,6 +14,13 @@ namespace AdiQuickLaunchLib
          private string _name;
          private bool _isDirty; // The new tracking flag
          private int _order; 
+         
+         public string Parameters { get; set; } = "";
+         
+         [JsonIgnore]
+         public bool IsMissing => IsDirectory 
+            ? !Directory.Exists(Path) 
+            : !File.Exists(Path);
          
          public string Name
          {
@@ -122,6 +130,7 @@ namespace AdiQuickLaunchLib
       private string _name;
       private bool _isEditing;
       private string _iconPath;
+      public bool IsPinned { get; set; } = false;
 
       public string Name
       {

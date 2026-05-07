@@ -79,32 +79,6 @@ namespace AdiQuickLaunchManager
          }), System.Windows.Threading.DispatcherPriority.ContextIdle);
       }
 
-      private void EditLauncherName()
-      {
-         if (LaunchersList.SelectedItem is QuickLauncher launcher)
-         {
-            if (!_editOriginals.ContainsKey(launcher))
-               _editOriginals[launcher] = launcher.Name;
-
-            launcher.IsEditing = true;
-
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-               var listBoxItem = (ListBoxItem)LaunchersList.ItemContainerGenerator.ContainerFromItem(launcher);
-               if (listBoxItem != null)
-               {
-                  var textBox = FindVisualChild<TextBox>(listBoxItem);
-                  if (textBox != null)
-                  {
-                     textBox.Focus();
-                     textBox.SelectAll();
-                     LaunchersList.ScrollIntoView(launcher);
-                  }
-               }
-            }), System.Windows.Threading.DispatcherPriority.ContextIdle);
-         }
-      }
-
       private void EditorTextBox_Loaded(object sender, RoutedEventArgs e)
       {
          if (sender is TextBox tb && tb.DataContext is QuickLauncher launcher)
@@ -226,47 +200,53 @@ namespace AdiQuickLaunchManager
 
          CreateShortcut(sDestLink, sQLaunchAppl, lauchnerProfile, launcher.IconPath);
 
-         MessageBox.Show($"Add the link '{Path.GetFileName(sDestLink)}' into the Taskbar." + Environment.NewLine +
-                         $"You can access your Links over the jump list" + Environment.NewLine +  
-                         $"After adding you can delete the link from the desktop", "AdiQuickLauncher", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.Yes);
+         MessageBox.Show(
+            $"Shortcut '{launcher.Name}' created on Desktop.\n\n" +
+            $"To add to taskbar:\n" +
+            $"1. Find '{launcher.Name}' on your Desktop\n" +
+            $"2. Right-click it → 'Pin to taskbar'\n" +
+            $"3. You can then delete the desktop shortcut",
+            "Pin to Taskbar",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
 
-         PinToTaskbarButton_Click(null, null);
+         //PinToTaskbarButton_Click(null, null);
       }
       
-      private async void PinToTaskbarButton_Click(object sender, RoutedEventArgs e)
-      {
-         // 1. Check if the TaskbarManager API is available on the current Windows version.
-         if (ApiInformation.IsTypePresent("Windows.UI.Shell.TaskbarManager"))
-         {
-            TaskbarManager taskbarManager = TaskbarManager.GetDefault();
-
-            // 2. Check if the app is already pinned.
-            if (!await taskbarManager.IsCurrentAppPinnedAsync())
-            {
-               // 3. Request pin. This will show the user confirmation dialog.
-               bool isPinned = await taskbarManager.RequestPinCurrentAppAsync();
-
-               if (isPinned)
-               {
-                  // Success!
-                  MessageBox.Show("App successfully pinned to the taskbar.");
-               }
-               else
-               {
-                  // User clicked 'No' or dismissed the prompt.
-                  MessageBox.Show("Pin request declined or failed.");
-               }
-            }
-            else
-            {
-               MessageBox.Show("App is already pinned to the taskbar.");
-            }
-         }
-         else
-         {
-            MessageBox.Show("Taskbar pinning API is not supported on this version of Windows.");
-         }
-      }
+      // private async void PinToTaskbarButton_Click(object sender, RoutedEventArgs e)
+      // {
+      //    // 1. Check if the TaskbarManager API is available on the current Windows version.
+      //    if (ApiInformation.IsTypePresent("Windows.UI.Shell.TaskbarManager"))
+      //    {
+      //       TaskbarManager taskbarManager = TaskbarManager.GetDefault();
+      //
+      //       // 2. Check if the app is already pinned.
+      //       if (!await taskbarManager.IsCurrentAppPinnedAsync())
+      //       {
+      //          // 3. Request pin. This will show the user confirmation dialog.
+      //          bool isPinned = await taskbarManager.RequestPinCurrentAppAsync();
+      //
+      //          if (isPinned)
+      //          {
+      //             // Success!
+      //             MessageBox.Show("App successfully pinned to the taskbar.");
+      //          }
+      //          else
+      //          {
+      //             // User clicked 'No' or dismissed the prompt.
+      //             MessageBox.Show("Pin request declined or failed.");
+      //          }
+      //       }
+      //       else
+      //       {
+      //          MessageBox.Show("App is already pinned to the taskbar.");
+      //       }
+      //    }
+      //    else
+      //    {
+      //       MessageBox.Show("Taskbar pinning API is not supported on this version of Windows.");
+      //    }
+      // }
 
       private  string GetApplicationInstallPath()
       {
@@ -300,19 +280,18 @@ namespace AdiQuickLaunchManager
       {
          if (LaunchersList.SelectedItem is QuickLauncher launcher)
          {
-            var dialog = new Microsoft.Win32.OpenFolderDialog();
+            var dialog = new EditItemDialog(isDirectory: true) { Owner = this };
             if (dialog.ShowDialog() == true)
             {
-               launcher.Items.Add(
-                  new QuickLauncher.QuickItem()
-                  {
-                     Name = Path.GetDirectoryName(dialog.FolderName),
-                     IsDirectory = true,
-                     Path = dialog.FolderName
-                  });
+               launcher.Items.Add(new QuickLauncher.QuickItem
+               {
+                  Name = dialog.ItemName,
+                  Path = dialog.ItemPath,
+                  IsDirectory = true,
+                  Order = launcher.Items.Count
+               });
+               Shared.SaveLauncher(launcher);
             }
-            
-            Shared.SaveLauncher(launcher);
          }
          else
          {
@@ -327,21 +306,17 @@ namespace AdiQuickLaunchManager
       {
          if (LaunchersList.SelectedItem is QuickLauncher launcher)
          {
-            var dialog = new Microsoft.Win32.OpenFileDialog();
-            dialog.Multiselect = true;
+            var dialog = new EditItemDialog(isDirectory: false) { Owner = this };
             if (dialog.ShowDialog() == true)
             {
-               foreach (string sFileName in dialog.FileNames)
+               launcher.Items.Add(new QuickLauncher.QuickItem
                {
-                  launcher.Items.Add(
-                     new QuickLauncher.QuickItem()
-                     {
-                        Name = Path.GetFileName(sFileName),
-                        IsDirectory = false,
-                        Path = sFileName
-                     });
-               }
-               
+                  Name = dialog.ItemName,
+                  Path = dialog.ItemPath,
+                  Parameters = dialog.ItemParameters,
+                  IsDirectory = false,
+                  Order = launcher.Items.Count
+               });
                Shared.SaveLauncher(launcher);
             }
          }
@@ -358,8 +333,15 @@ namespace AdiQuickLaunchManager
       {
          if (LaunchersList.SelectedItem is QuickLauncher launcher && FoldersList.SelectedItem is QuickLauncher.QuickItem item)
          {
-            launcher.Items.Remove(item);
-            Shared.SaveLauncher(launcher);
+            var result = MessageBox.Show(
+               $"Remove '{item.Name}'?", "Confirm Remove",
+               MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+               launcher.Items.Remove(item);
+               Shared.SaveLauncher(launcher);
+            }
          }
          else
          {
@@ -443,6 +425,28 @@ namespace AdiQuickLaunchManager
 
          launcher.Items.Move(oldIndex, newIndex);
          Shared.SaveLauncher(launcher);
+      }
+
+      private void EditItem_Click(object sender, RoutedEventArgs e)
+      {
+         if (LaunchersList.SelectedItem is not QuickLauncher launcher ||
+             FoldersList.SelectedItem is not QuickLauncher.QuickItem item) return;
+
+         var dialog = new EditItemDialog(item.IsDirectory, item.Name, item.Path, item.Parameters)
+            { Owner = this };
+
+         if (dialog.ShowDialog() == true)
+         {
+            item.Name = dialog.ItemName;
+            item.Path = dialog.ItemPath;
+            item.Parameters = dialog.ItemParameters;
+            Shared.SaveLauncher(launcher);
+         }
+      }
+
+      private void ContextRemoveItem_Click(object sender, RoutedEventArgs e)
+      {
+         RemoveFolder_Click(sender, e);
       }
    }
 }

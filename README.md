@@ -11,6 +11,11 @@ If you open that list you just say "Pin to Taskbar" in the Taskbar menu (right m
 
 ## Last changes:
 
+### 26.5.7.16
+- Pinned Launcher saved
+- added optional parameter to each app/folder
+- Add/Edit Item - Dialog will added
+
 ### 26.5.6.20
 - link error in the launcher (wrong app pathes)
 
